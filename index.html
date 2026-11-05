@@ -2,50 +2,60 @@
 <html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Shweta Photo-Live — Office Command System | Developed by Sushant Rattan</title>
 <style>
-*{box-sizing:border-box} body{margin:0;font-family:system-ui,'Segoe UI',sans-serif;background:#0d0b18;color:#f2efff;display:flex;height:100vh;overflow:hidden}
-#stage{flex:1.35;display:flex;flex-direction:column;min-width:0}
-#topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(90deg,#241145,#0a1f44);border-bottom:2px solid #ff7b1c}
-#topbar img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #ffd76a}
-#topbar .nm{font-weight:800;font-size:18px} #topbar .sb{font-size:12px;color:#cdbcf5}
-.chip{margin-left:auto;background:#17122e;border:1px solid #4b3a8f;border-radius:999px;padding:5px 12px;font-size:12px;color:#ffe9a8;white-space:nowrap}
+*{box-sizing:border-box}
+:root{--acc:#22d3ee;--acc2:#8b5cf6}
+body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#04050d;color:#eef2ff;display:flex;height:100vh;overflow:hidden}
+#stage{flex:1.35;display:flex;flex-direction:column;min-width:0;position:relative;background:radial-gradient(900px 500px at 15% -10%,rgba(139,92,246,.20),transparent 60%),radial-gradient(900px 600px at 110% 110%,rgba(34,211,238,.13),transparent 60%),#04050d}
+#topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(10,12,28,.55);backdrop-filter:blur(14px);border-bottom:1px solid rgba(139,92,246,.35);z-index:6;flex-wrap:wrap}
+#topbar img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid transparent;background:linear-gradient(#0a0c1c,#0a0c1c) padding-box,linear-gradient(135deg,var(--acc),var(--acc2)) border-box;box-shadow:0 0 18px rgba(34,211,238,.45)}
+#topbar .nm{font-weight:800;font-size:19px;letter-spacing:.3px;background:linear-gradient(90deg,#ffffff,#a5f3fc 55%,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+#topbar .sb{font-size:12px;color:#9aa7d0}
+.chip{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,255,.28);border-radius:999px;padding:5px 12px;font-size:12px;color:#dbeafe;white-space:nowrap}
 .chip+.chip{margin-left:8px}
+#brainchip{color:#a7f3d0;border-color:rgba(52,211,153,.55);box-shadow:inset 0 0 12px rgba(52,211,153,.22)}
 #dnOverlay{position:absolute;inset:0;pointer-events:none;transition:background 1.2s;z-index:5}
-#env{position:relative;flex:1;background:radial-gradient(1200px 700px at 70% 15%,#33235c 0%,#17102e 55%,#0b0819 100%);transition:background .6s}
-#env::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,24,.16),rgba(10,6,24,.04) 40%,rgba(10,6,24,.5))}
-#presence{position:absolute;right:22px;top:22px;width:min(57%,570px);z-index:3;border-radius:16px;overflow:hidden;border:2px solid rgba(255,215,106,.75);box-shadow:0 14px 40px rgba(0,0,0,.6);background:#000}
+#env{position:relative;flex:1;background:radial-gradient(1200px 700px at 70% 15%,#1b1440 0%,#0d0a24 55%,#05040f 100%);transition:background .6s;overflow:hidden}
+#env::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(148,163,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,black 25%,transparent 75%);mask-image:radial-gradient(ellipse at 50% 40%,black 25%,transparent 75%)}
+#env::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,5,13,.05),rgba(4,5,13,0) 40%,rgba(4,5,13,.45));pointer-events:none}
+#presence{position:absolute;right:22px;top:22px;width:min(57%,570px);z-index:3;border-radius:20px;overflow:hidden;border:1px solid rgba(34,211,238,.55);box-shadow:0 0 0 1px rgba(139,92,246,.25),0 18px 50px rgba(0,0,0,.65),0 0 42px rgba(34,211,238,.16);background:#000}
 #presence video{width:100%;display:block}
-#presence .tag{position:absolute;left:10px;bottom:8px;background:rgba(10,6,24,.78);padding:4px 10px;border-radius:8px;font-size:12px;color:#ffd76a;z-index:4}
-#danceWrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 60%,rgba(123,47,247,.35),rgba(0,0,0,.25));z-index:2}
+#presence .tag{position:absolute;left:10px;bottom:8px;background:rgba(4,6,18,.8);padding:4px 11px;border-radius:999px;font-size:12px;color:#a5f3fc;border:1px solid rgba(34,211,238,.35);z-index:4}
+#danceWrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 60%,rgba(139,92,246,.35),rgba(0,0,0,.25));z-index:2}
 #danceWrap img{height:78%;border-radius:18px;border:3px solid #ffd76a;box-shadow:0 18px 50px rgba(0,0,0,.65);will-change:transform}
 .note{position:absolute;font-size:26px;animation:floatUp 2.6s ease-in forwards;pointer-events:none;z-index:3}
 @keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-240px);opacity:0}}
-#taskcard{position:absolute;left:22px;bottom:20px;z-index:3;background:rgba(12,8,26,.88);border:1px solid #4b3a8f;border-radius:14px;padding:13px 16px;max-width:390px}
-#taskcard .tt{font-weight:700;color:#ffd76a;margin-bottom:6px}
-#taskcard .st{font-size:13px;color:#bdb2ea;padding:2.5px 0}
-#taskcard .st.done{color:#9fe8a9}
-#scenes{display:flex;gap:8px;padding:10px 14px;background:#12102a;border-top:1px solid #35306b;flex-wrap:wrap}
-#scenes span{align-self:center;font-size:12px;color:#cdbcf5;margin-right:2px}
-#scenes button{background:#1d1836;color:#efeaff;border:1px solid #4b3a8f;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:13px}
-#scenes button.on{border-color:#ffd76a;color:#ffd76a}
-#chat{flex:1;display:flex;flex-direction:column;background:#100d22;border-left:1px solid #35306b;min-width:320px}
-#chat .hd{padding:12px 16px;font-weight:700;border-bottom:1px solid #35306b;background:#17122e}
+#taskcard{position:absolute;left:22px;bottom:20px;z-index:3;background:rgba(8,10,24,.72);backdrop-filter:blur(12px);border:1px solid rgba(148,163,255,.3);border-radius:16px;padding:13px 16px;max-width:390px;box-shadow:0 12px 34px rgba(0,0,0,.5)}
+#taskcard .tt{font-weight:700;color:#a5f3fc;margin-bottom:6px}
+#taskcard .st{font-size:13px;color:#b9c2e8;padding:2.5px 0}
+#taskcard .st.done{color:#86efac}
+#scenes{display:flex;gap:8px;padding:10px 14px;background:rgba(8,10,24,.6);border-top:1px solid rgba(148,163,255,.22);flex-wrap:wrap}
+#scenes span{align-self:center;font-size:12px;color:#9aa7d0;margin-right:2px}
+#scenes button{background:rgba(255,255,255,.04);color:#e2e8f0;border:1px solid rgba(148,163,255,.3);border-radius:999px;padding:7px 13px;cursor:pointer;font-size:13px;transition:all .2s}
+#scenes button:hover{border-color:var(--acc);color:#a5f3fc}
+#scenes button.on{border-color:var(--acc);color:#04050d;background:linear-gradient(90deg,var(--acc),#67e8f9);font-weight:700}
+#chat{flex:1;display:flex;flex-direction:column;background:rgba(7,9,20,.88);border-left:1px solid rgba(148,163,255,.22);min-width:320px}
+#chat .hd{padding:13px 16px;font-weight:700;border-bottom:1px solid rgba(148,163,255,.22);background:rgba(255,255,255,.03);letter-spacing:.2px}
 #msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px}
-.msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap}
-.msg.me{align-self:flex-end;background:#3b1470}
-.msg.her{align-self:flex-start;background:#1d1836;border:1px solid #35306b}
-#quick{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid #35306b}
-#quick button{background:#241145;color:#ffd76a;border:1px solid #ff7b1c;border-radius:999px;padding:6px 11px;cursor:pointer;font-size:12.5px}
-#inrow{display:flex;gap:8px;padding:12px;border-top:1px solid #35306b}
-#in{flex:1;background:#17122e;border:1px solid #4b3a8f;border-radius:10px;color:#fff;padding:11px;font-size:14px}
-#send{background:#ff7b1c;color:#1b0f00;border:none;border-radius:10px;padding:0 18px;font-weight:800;cursor:pointer}
+.msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap;animation:msgIn .25s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;border-bottom-right-radius:4px;box-shadow:0 6px 18px rgba(80,70,229,.35)}
+.msg.her{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,255,.25);border-left:3px solid var(--acc);border-bottom-left-radius:4px}
+#quick{display:flex;gap:6px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid rgba(148,163,255,.22)}
+#quick button{background:rgba(34,211,238,.08);color:#cffafe;border:1px solid rgba(34,211,238,.4);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:12.5px;transition:all .2s}
+#quick button:hover{background:rgba(34,211,238,.22);box-shadow:0 0 14px rgba(34,211,238,.3)}
+#inrow{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(148,163,255,.22)}
+#in{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,255,.35);border-radius:12px;color:#fff;padding:11px;font-size:14px;outline:none}
+#in:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+#send{background:linear-gradient(90deg,var(--acc2),var(--acc));color:#fff;border:none;border-radius:12px;padding:0 20px;font-weight:800;cursor:pointer;letter-spacing:.3px;box-shadow:0 6px 20px rgba(56,130,246,.35)}
+#send:hover{filter:brightness(1.12)}
 @media(max-width:900px){
  body{flex-direction:column;height:100dvh}
  #stage{flex:none;height:45dvh}
- #chat{flex:1;min-width:0;min-height:0;border-left:none;border-top:1px solid #35306b}
+ #chat{flex:1;min-width:0;min-height:0;border-left:none;border-top:1px solid rgba(148,163,255,.22)}
  #presence{width:88%;right:6%;top:10px}
  #taskcard{left:10px;bottom:10px;max-width:80%;padding:9px 11px}
  #taskcard .st{font-size:12px}
- #topbar{flex-wrap:wrap;gap:6px;padding:8px 10px}
+ #topbar{gap:6px;padding:8px 10px}
  #topbar .nm{font-size:15px} #topbar .sb{font-size:11px}
  #topbar img{width:38px;height:38px}
  .chip{margin-left:0;font-size:11px;padding:4px 9px}
@@ -58,6 +68,7 @@
  #inrow{padding:9px} #in{font-size:14px;padding:10px}
  #danceWrap img{height:70%}
 }
+
 </style></head><body>
 <div id="stage">
  <div id="topbar">
@@ -67,7 +78,7 @@
   <div class="chip" id="dnchip">☀️ Din</div>
   <div class="chip" id="locchip">📍 Meri Cabin</div>
   <div class="chip" id="netchip">🌐 Net check…</div>
-  <div class="chip" id="keychip" style="cursor:pointer" onclick="setKey()">🔑 Brain key lagao</div>
+  <div class="chip" id="brainchip">🧠 Live Brain ON</div>
  </div>
  <div id="env">
   <div id="dnOverlay"></div>
@@ -87,28 +98,16 @@
  <div id="msgs"></div>
  <div id="quick">
   <button onclick="ask('Hi')">👋 Hi</button>
-  <button onclick="ask('dance karo')">💃 Dance karo</button>
+  <button onclick="ask('Stablex kya hai')">🪙 Stablex</button>
+  <button onclick="ask('i4option kya hai')">📈 i4option</button>
   <button onclick="ask('office kaam karo')">💼 Office kaam karo</button>
   <button onclick="ask('visitor aaya hai, guide karo')">🙏 Visitor guide karo</button>
-  <button onclick="ask('brush karo')">🪥 Brush karo</button>
   <button onclick="ask('kaise ho')">💗 Kaise ho</button>
   <button onclick="sharePage()">📤 Share karo</button>
  </div>
  <div id="inrow"><input id="in" placeholder="Shweta ko command do ya kuch poochho…" onkeydown="if(event.key==='Enter')send()"><button id="send" onclick="send()">Bhejo</button></div>
 </div>
 
-<div id="keypanel" style="display:none;position:fixed;inset:0;background:rgba(5,3,15,.74);z-index:60;align-items:center;justify-content:center">
- <div style="background:#17122e;border:1.5px solid #ffd76a;border-radius:14px;padding:18px;width:min(92vw,440px)">
-  <div style="font-weight:800;margin-bottom:6px">🔑 Gemini Brain Key</div>
-  <div style="font-size:13px;color:#cdbcf5;margin-bottom:10px">Apni FREE Gemini API key yahan daalo. Ye sirf tumhare is browser mein save hogi — kahin bahar nahi jayegi.</div>
-  <input id="keyin" type="text" placeholder="Puri key yahan paste karo" style="width:100%;background:#0d0b18;border:1px solid #4b3a8f;border-radius:9px;color:#fff;padding:10px;font-size:13px">
-  <div style="display:flex;gap:8px;margin-top:12px">
-   <button onclick="saveKey()" style="flex:1;background:#ff7b1c;color:#1b0f00;border:none;border-radius:9px;padding:10px;font-weight:800;cursor:pointer">Lagao</button>
-   <button onclick="clearKey()" style="background:#241145;color:#ffd76a;border:1px solid #4b3a8f;border-radius:9px;padding:10px;cursor:pointer">Hatao</button>
-   <button onclick="closeKey()" style="background:#241145;color:#fff;border:1px solid #4b3a8f;border-radius:9px;padding:10px;cursor:pointer">Band</button>
-  </div>
- </div>
-</div>
 <audio id="voice" preload="auto" style="display:none"></audio>
 <script>
 const SCENES={reception:{bg:'radial-gradient(1200px 700px at 30% 20%,#3a2150 0%,#1a1030 55%,#0d0a1c 100%)',loc:'📍 Reception Lounge'},cabin:{bg:'radial-gradient(1200px 700px at 70% 15%,#33235c 0%,#17102e 55%,#0b0819 100%)',loc:'📍 Meri Cabin'},floor:{bg:'radial-gradient(1200px 700px at 50% 10%,#14324a 0%,#101a30 55%,#090b1a 100%)',loc:'📍 Main Floor'},meeting:{bg:'radial-gradient(1200px 700px at 25% 25%,#1d2f57 0%,#121a33 55%,#0a0d1e 100%)',loc:'📍 Meeting Room'}};
@@ -121,7 +120,7 @@ function setScene(k,btn){env.style.background=SCENES[k].bg;document.getElementBy
 function moodInfo(){const h=new Date().getHours();if(h<12)return{note:'Subah ka time hai — mood bilkul fresh hai, energy full hai.',chip:'😊 Fresh · Subah'};if(h<17)return{note:'Din ka time hai — main focused hoon, kaam ki puri energy hai.',chip:'🙂 Focused · Din'};if(h<21)return{note:'Shaam ho gayi hai — mood shaant hai, thoda relaxed hoon.',chip:'😌 Relaxed · Shaam'};return{note:'Raat ho rahi hai — thodi neend aa rahi hai, aaram ka mann hai.',chip:'🥱 Neend si · Raat'};}
 function dayNight(){const h=new Date().getHours();let bg,lb;if(h>=21||h<6){bg='rgba(8,10,38,0.42)';lb='🌙 Raat · Night Light';}else if(h<11){bg='rgba(255,176,92,0.10)';lb='🌅 Subah ki Roshni';}else if(h<17){bg='rgba(0,0,0,0)';lb='☀️ Din ki Roshni';}else{bg='rgba(255,110,40,0.16)';lb='🌇 Shaam · Golden Light';}const o=document.getElementById('dnOverlay');if(o)o.style.background=bg;const c=document.getElementById('dnchip');if(c)c.textContent=lb;}
 function moodChip(){document.getElementById('moodchip').textContent=moodInfo().chip+' · ❤️ '+affection;dayNight();}
-moodChip();keyChip();checkNet();
+moodChip();brainChip();checkNet();
 function addMsg(t,cls){const m=document.getElementById('msgs');const d=document.createElement('div');d.className='msg '+cls;if(cls==='her'){d.innerHTML=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/(https:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:#ffd76a;text-decoration:underline">$1</a>');}else{d.textContent=t;}m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function setPresence(key,loop,tag){if(curClip!==key){vid.src=CLIPS[key];curClip=key;}vid.loop=!!loop;vid.currentTime=0;vid.play().catch(function(){});if(tag)vtag.textContent=tag;}
 function idle(){if(busyWork)return;setPresence('idle',true,'Shweta · Cabin mein');}
@@ -129,19 +128,7 @@ function ttsFallback(clean){
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(clean);const vs=speechSynthesis.getVoices();const v=vs.find(function(x){return /female|mahila|zira|heera|swara|google हिन्दी/i.test(x.name);})||vs.find(function(x){return /hi[-_]/i.test(x.lang)&&!/male/i.test(x.name);})||vs.find(function(x){return /hi[-_]/i.test(x.lang);});if(v)u.voice=v;u.rate=1.02;u.pitch=1.05;speechSynthesis.speak(u);}catch(e){}
 }
 function shkGet(){try{return localStorage.getItem('shk')||SHK_DEFAULT||'';}catch(e){return window.__shk||SHK_DEFAULT||'';}}
-function shkSet(v){try{localStorage.setItem('shk',v);}catch(e){} window.__shk=v;}
-function setKey(){const kp=document.getElementById('keypanel');document.getElementById('keyin').value=shkGet();kp.style.display='flex';setTimeout(function(){try{document.getElementById('keyin').focus();}catch(e){}},60);}
-function closeKey(){document.getElementById('keypanel').style.display='none';}
-function saveKey(){const v=document.getElementById('keyin').value.trim();shkSet(v);closeKey();
-  if(!v){keyChip();addMsg('Key khali thi — kuch save nahi hua.','her');return;}
-  const c=document.getElementById('keychip');if(c)c.textContent='🔑 Check ho raha hai…';
-  addMsg('Key save kar li — ab asal connection test kar rahi hoon…','her');
-  fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':v}})
-  .then(function(r){ if(r.ok){keyChip();addMsg('✅ Ho gaya! Key sahi hai aur live brain CONNECT ho gaya hai. Ab koi bhi cross sawal puch kar dekho!','her');}
-    else{keyChip();addMsg('⚠️ Key save ho gayi hai, lekin connection test fail raha (server code '+r.status+'). Lagta hai key puri copy nahi hui — 🔑 chip se dobara Copy-key wali puri key daal kar dekho.','her');} })
-  .catch(function(){keyChip();addMsg('⚠️ Key save ho gayi hai, lekin abhi internet se test nahi ho paya. Net aate hi sawal puchne par live jawab try hoga.','her');}); }
-function clearKey(){shkSet('');keyChip();closeKey();addMsg('Key hata di gayi.','her');}
-function keyChip(){const c=document.getElementById('keychip');if(c)c.textContent=shkGet()?'🔑 Live Brain ON':'🔑 Brain key lagao';}
+function brainChip(){const c=document.getElementById('brainchip');if(c)c.textContent='🧠 Live Brain ON';}
 function sharePage(){const u=location.href;if(navigator.share){navigator.share({title:'Shweta — Virtual AI Assistant',text:'Shweta se baat karo — Alpha Street Technologies ki virtual AI',url:u}).catch(function(){});}else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){addMsg('🔗 Link copy ho gaya — kisi ko bhi bhej sakte ho, woh seedha browser mein Shweta se baat kar lega.','her');}).catch(function(){addMsg('Link: '+u,'her');});}else{addMsg('Link: '+u,'her');}}
 function askWeb(raw,keyNote){
   taskReset();addMsg('🌐 Ek minute — internet se live dhoondh rahi hoon…','her');
@@ -151,9 +138,9 @@ function askWeb(raw,keyNote){
   .then(function(r){return r.json();})
   .then(function(d){let ex='';try{const pg=d.query.pages;const k=Object.keys(pg)[0];ex=pg[k].extract||'';}catch(e){}
     if(ex&&ex.length>40){netChip(true);speak('🌐 Internet se mila: '+trim(ex),'talk');return;}
-    return fetch('https://api.duckduckgo.com/?q='+q+'&format=json&no_html=1&skip_disambig=1').then(function(r){return r.json();}).then(function(g){const a=g.Answer||g.AbstractText||g.Definition||'';if(a){netChip(true);speak('🌐 Internet se mila: '+trim(a),'talk');}else{speak('Internet par iska seedha jawab nahi mila. Upar 🔑 Brain key laga doge toh main gehrai se samjha dungi — ya sawal thoda aur saaf karke puchho.','talk');}});
+    return fetch('https://api.duckduckgo.com/?q='+q+'&format=json&no_html=1&skip_disambig=1').then(function(r){return r.json();}).then(function(g){const a=g.Answer||g.AbstractText||g.Definition||'';if(a){netChip(true);speak('🌐 Internet se mila: '+trim(a),'talk');}else{speak('Internet par iska seedha jawab nahi mila — sawal thoda aur saaf karke puchho, ya Stablex/i4option ke baare mein puchho, woh main video ke saath samjha dungi.','talk');}});
   })
-  .catch(function(){netChip(false);speak(keyNote?'Live brain ki key sahi nahi lag rahi aur internet se bhi jawab nahi aaya — 🔑 chip se key dobara check karo. Tab tak mere bank wale sawal puchho.':'Abhi internet se connect nahi ho pa raha — net check karke phir try karo. Tab tak mere bank wale sawal puchho, unka jawab pakka milega.','talk');});
+  .catch(function(){netChip(false);speak('Live brain aur internet dono se jawab nahi aaya — thodi der baad phir try karo. Tab tak mere bank wale sawal puchho, unka jawab pakka milega.','talk');});
 }
 function netChip(ok){const c=document.getElementById('netchip');if(c)c.textContent=ok?'🌐 Internet: Live':'🌐 Internet: Offline';}
 function checkNet(){fetch('https://en.wikipedia.org/w/api.php?action=query&meta=siteinfo&format=json&origin=*').then(function(r){netChip(r.ok);}).catch(function(){netChip(false);});}
