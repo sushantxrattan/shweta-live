@@ -435,8 +435,11 @@ function handle(raw){
   addMsg(raw,'me');let t=raw.toLowerCase().trim();
   // CEO ne chunna hai — company ya khud ke baare mein?
   if(ceoAsked){
-    if(/company|alpha|business/.test(t)){ceoAsked=false;teachAnswer('teachTEAM','Shweta · Company ka parichay',COMPANY_TEXT,'company_intro');return;}
-    ceoAsked=false; t='ceo '+t;
+    ceoAsked=false;
+    if(/company|alpha|business|office|team/.test(t)){teachAnswer('teachTEAM','Shweta · Company ka parichay',COMPANY_TEXT,'company_intro');return;}
+    if(/aapke|apne baare|khud ke|about you|yourself|manoj|ceo/.test(t)){t='ceo '+t;}
+    // Warna: koi aur topic/jawab (jaise 'stablex') — CEO mode yahin khatam, neeche normal routing chalegi.
+    // (Common-sense fix 2026-11-12: pehle har jawab par zabardasti 'ceo' jud jata tha — 'stablex' par bhi Manoj Sir ka bio aa jata tha.)
   }
   // Naam wala flow — pehla jawab naam ho sakta hai
   if(nameAsked&&!visitorName){
