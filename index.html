@@ -436,16 +436,26 @@ function handle(raw){
   // CEO ne chunna hai — company ya khud ke baare mein?
   if(ceoAsked){
     ceoAsked=false;
-    if(/company|alpha|business|office|team/.test(t)){teachAnswer('teachTEAM','Shweta · Company ka parichay',COMPANY_TEXT,'company_intro');return;}
-    if(/aapke|apne baare|khud ke|about you|yourself|manoj|ceo/.test(t)){t='ceo '+t;}
-    // Warna: koi aur topic/jawab (jaise 'stablex') — CEO mode yahin khatam, neeche normal routing chalegi.
-    // (Common-sense fix 2026-11-12: pehle har jawab par zabardasti 'ceo' jud jata tha — 'stablex' par bhi Manoj Sir ka bio aa jata tha.)
+    if(/company|alpha|business|office|team|dusra|second/.test(t)){teachAnswer('teachTEAM','Shweta · Company ka parichay',COMPANY_TEXT,'company_intro');return;}
+    if(/(mere|apne|aapke|khud ke|tumhare)\s+(bare|baare)|about\s+(you|yourself|me)|manoj|ceo|pehle\s+wala|pehla\s+wala/.test(t)){t='ceo '+t;}
+    else if(t.split(' ').length<=5&&!/stablex|i4option|kya|kaise|kab|kahan|kyun|fees|kyc|account|video|dance|team|naam|name/.test(t)){ceoAsked=true;taskReset();speak('Samajh nahi aaya Sir — kya main aapko aapke baare mein batau, ya company ke baare mein?','talk');return;}
+    // Warna: koi aur saaf topic (jaise 'stablex') — CEO mode yahin khatam, neeche normal routing chalegi.
+    // (Common-sense fix 2026-11-12: pehle har jawab par zabardasti 'ceo' jud jata tha — 'stablex' par bhi Manoj Sir ka bio aa jata tha;
+    //  aur 'mere bare mei btao' jaise loose Hinglish jawab pehchane hi nahi jate the — woh seedha internet par chala jata tha.)
   }
   // Naam wala flow — pehla jawab naam ho sakta hai
   if(nameAsked&&!visitorName){
     const nm=raw.replace(/mera naam|my name is|main hoon|i am/gi,'').replace(/[^a-zA-Z\u0900-\u097F ]/g,'').trim().toLowerCase().replace(/^main\s+/,'').replace(/\s+(hai|hoon|hu)$/,'');
     if(nm&&nm.split(/\s+/).length<=4&&!/^(hi+|hello|hey|namaste|helo|hlo)$/.test(nm)&&!/kya|kaise|kon|batao|stablex|i4option|dance|team|ceo|fees|withdraw|deposit|kyc|sip|office|kaam|kitni|kitna|what|who|why|when|where|how|tell|show|please|open interest|neend|sone jao|namaskar|namaste karo|haath jod|taali|tali|clap|diwali|shubh diwali|wink|aankh|jashn|celebrate|party|shabaash|thumbs|good job|badhiya|gale|hug|shhh|shh|chup raho|haath milao|handshake|haath uthao|haath upar|dhanyavaad|shukriya|thank|style dikhao|cool bano|cool dikhao|swag|taakat dikhao|strong bano|muscle dikhao|taakat dikha|kaan pakdo|kaan pakad|flying kiss|kiss karo|kiss do|jeebh dikhao|jeebh nikalo|tongue out|sharmao|sharma ke dikhao|shy bano|dil banao|heart banao|dil dikhao|dil bana ke dikhao|dhyaan lagao|meditation karo|meditate karo|shaant baitho|dhyaan karo|chai piyo|chai peeyo|chai pi lo|ek chai|chai pilao|salaam karo|salam karo|salute karo|salute|jai hind|phool do|flower do|phool dena|gulab do|phool dedo/.test(nm)){setName(nm);return;}
     nameAsked=false;
+  }
+  // 🙋 'mere baare mein batao' — visitor APNE baare mein puch raha hai; jawab usi ke parichay ka, internet NAHI (common-sense fix 2026-11-12)
+  if(visitorName&&(/\bmere\s+(bare|baare)\b/.test(t)||/about\s+(me|myself)\b/.test(t))){
+    const _vk=visitorName.toLowerCase().split(' ')[0];
+    if(_vk==='manoj'||_vk==='saharan'){t='ceo '+t;}
+    else if(_vk==='sushant'||_vk==='rattan'){t='sushant '+t;}
+    else if(PERSON_INTRO[_vk]){taskReset();speak(PERSON_INTRO[_vk],'talk');return;}
+    else{taskReset();speak('Aap '+visitorName+' hain — hamare khaas mehman! Aapke yahan aane se office mein ronak aa jati hai. Kuch aur bataiye apne baare mein, main khushi se sunungi!','talk');return;}
   }
   // ❓ Kisi shakhs ke baare mein sawal — jawab USI shakhs ka milega; apna naam (jaise 'i am sushant')
   // sawal ko hijack nahi karega (common-sense fix 2026-11-12: 'i am sushant and who is karan' par Sushant wala jawab aa jata tha)
@@ -554,7 +564,7 @@ function handle(raw){
   if(/aaj.{0,24}(din|date|tarikh|day)|konsa din|konsi date|kya date hai|tarikh kya|what.*(date|day)/.test(t)){const _d=new Date();taskReset();speak('📅 Aaj '+_d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' hai.','talk');return;}
   if(/time kya|samay kya|kitne baje|what time|abhi time/.test(t)){const _d=new Date();taskReset();speak('🕐 Abhi '+_d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true})+' baje hain.','talk');return;}
   const GEN=[
-   [/tum kaun ho|tum kon ho|tum kaun|who are you|tumhara naam|your name|apna naam batao|tum kya ho|introduce yourself|apna parichay do/, '🙏 Main Shweta hoon — Alpha Street Technologies, Fatehabad ki virtual AI assistant. Mujhe mere developer Sushant Rattan ne banaya hai. Main Stablex aur i4option ke sawalon ke jawab video ke saath deti hoon, team ke baare mein batati hoon, aur aam baatein — joke, kahani, general knowledge — bhi karti hoon. Kuch puchh kar dekho!'],
+   [/tum kaun ho|tum kon ho|tum kaun|who are you|tumhara naam|your name|apna naam batao|tum kya ho|introduce yourself|apna parichay do|apne (bare|baare) mein/, '🙏 Main Shweta hoon — Alpha Street Technologies, Fatehabad ki virtual AI assistant. Mujhe mere developer Sushant Rattan ne banaya hai. Main Stablex aur i4option ke sawalon ke jawab video ke saath deti hoon, team ke baare mein batati hoon, aur aam baatein — joke, kahani, general knowledge — bhi karti hoon. Kuch puchh kar dekho!'],
    [/good morning|shubh prabhat|suprabhat/, '🌅 Good morning! Subah ki taazgi ke saath din shuru karein? Chai-nashta ho gaya? Batao, aaj kya karna hai — Stablex, i4option, ya bas baatein?'],
    [/good afternoon/, '🌤️ Good afternoon! Din kaisa ja raha hai? Batao, main kis kaam aaun?'],
    [/good evening|shubh sandhya/, '🌆 Good evening! Shaam ho gayi — aaram ka time, aur baaton ka bhi. Kya puchhna hai?'],
