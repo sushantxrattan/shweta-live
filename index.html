@@ -548,6 +548,12 @@ function handle(raw){
   // 👥 Naam ka common sense: pehchan EK baar set hoti hai. Uske baad sirf kisi ka naam likhna = us
   // shakhs ke baare mein puchhna — identity NAHI badlegi (jawab neeche ke person routes se aayega).
   // Pehchan tabhi (dobara) set hogi jab pehle koi naam set na ho, ya 'mera naam / i am' saaf kaha gaya ho.
+  // 🙋 Pure naam-claim, koi bhi naam (bug fix 2026-11-14): bareName sirf team ke naam pehchanta tha,
+  // isliye 'mera naam rahul hai' (naya naam) internet search par chala jata tha — Raj Kapoor wala jawab.
+  // Mixed ghoshna+sawal ('i am rahul and who is vishnu') upar handle ho chuka hai; yahan sirf saaf claim.
+  const _cl=t.match(/(?:mera naam|my name is|main hoon|i am|myself)\s+([a-z\u0900-\u097F]+(?:\s+[a-z\u0900-\u097F]+){0,1})/);
+  if(_cl){const _cn=_cl[1].replace(/\s+(hai|hoon|hu)$/,'').trim();
+    if(_cn&&!/\b(kya|kaise|kon|batao|stablex|i4option|team|ceo|dance|kaam|kyc|sip|fees|office|what|who|why|when|where|how|tell|show|please)\b/.test(_cn)&&!/^(hi+|hello|hey|namaste)$/.test(_cn)){setName(_cn);return;}}
   const _bn=bareName(raw);
   if(_bn&&(!visitorName||/\b(mera naam|my name is|i am|main hoon|myself)\b/.test(t))){setName(_bn);return;}
   // 🙏 Namaste (surprise, marathon run 9) — Hi wali line se pehle, taaki 'namaste karo' naam na bane, seedha namaste kare
