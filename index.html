@@ -579,7 +579,7 @@ function handle(raw){
     const _vk=visitorName.toLowerCase().split(' ')[0];
     if(_vk==='manoj'||_vk==='saharan'){t='ceo '+t;}
     else if(_vk==='sushant'||_vk==='rattan'){t='sushant '+t;}
-    else if(PERSON_INTRO[_vk]){taskReset();speak(PERSON_INTRO[_vk],'talk',undefined,PERCLIP[_vk],PERTAG[_vk]||'Shweta · Parichay');return;}
+    else if(PERSON_INTRO[_vk]){taskReset();speak(PERSON_INTRO[_vk],'talk',_vk,PERCLIP[_vk],PERTAG[_vk]||'Shweta · Parichay');return;}
     else{taskReset();speak('Aap '+visitorName+' hain — hamare khaas mehman! Aapke yahan aane se office mein ronak aa jati hai. Kuch aur bataiye apne baare mein, main khushi se sunungi!','talk');return;}
   }
   // ❓ Kisi shakhs ke baare mein sawal — jawab USI shakhs ka milega; apna naam (jaise 'i am sushant')
@@ -610,8 +610,8 @@ function handle(raw){
     else if(/mock/.test(t))_second=' Aur Mock Trade ke baare mein bhi jaanna ho toh bas "mock trade kya hota hai" likh do — main video ke saath samjha dungi.';
     else if(/manoj|ceo/.test(t))_second=' Aur Respected Manoj Sir (CEO) ke baare mein bhi jaanna ho toh bas "ceo kaun hai" likh do — main video ke saath samjha dungi.';
     else if(/sushant/.test(t))_second=' Aur Sushant Rattan (mere developer) ke baare mein bhi jaanna ho toh bas "sushant kaun hai" likh do.';
-    setLastTopic('person',PERSON_INTRO[_pt].split(' — ')[0],PERCLIP[_pt]||null,'Shweta · '+PERSON_INTRO[_pt].split(' — ')[0]+' ka parichay',PERSON_INTRO[_pt]+_second,null);
-    speak(PERSON_INTRO[_pt]+_second,'talk',undefined,PERCLIP[_pt],PERTAG[_pt]||'Shweta · Parichay');return;}}
+    setLastTopic('person',PERSON_INTRO[_pt].split(' — ')[0],PERCLIP[_pt]||null,'Shweta · '+PERSON_INTRO[_pt].split(' — ')[0]+' ka parichay',PERSON_INTRO[_pt]+_second,_pt);
+    speak(PERSON_INTRO[_pt]+_second,'talk',_pt,PERCLIP[_pt],PERTAG[_pt]||'Shweta · Parichay');return;}}
   // 👥 Naam ka common sense: pehchan EK baar set hoti hai. Uske baad sirf kisi ka naam likhna = us
   // shakhs ke baare mein puchhna — identity NAHI badlegi (jawab neeche ke person routes se aayega).
   // Pehchan tabhi (dobara) set hogi jab pehle koi naam set na ho, ya 'mera naam / i am' saaf kaha gaya ho.
