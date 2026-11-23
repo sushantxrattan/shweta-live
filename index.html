@@ -414,11 +414,12 @@ let _visionObjects=[];
 // 🧠 Model chain (2026-11-23): naya key + naye models — pehle gemini-3.6-flash,
 // busy (503/429) ya na mile (404) toh lite, phir latest. Ek model band ho toh
 // Shweta ka Live Brain band nahi hota.
-function gCall(body,mi){const GM=['gemini-3.6-flash','gemini-flash-lite-latest','gemini-flash-latest'];mi=mi||0;const key=shkGet().trim();
+function gCall(body,mi,rt){const GM=['gemini-3.6-flash','gemini-flash-lite-latest','gemini-flash-latest'];mi=mi||0;const key=shkGet().trim();
   return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GM[mi]+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)})
   .then(function(r){return r.json().then(function(d){return {ok:r.ok,st:r.status,d:d};});})
   .then(function(x){let a='';try{a=x.d.candidates[0].content.parts[0].text;}catch(e){}
-    if(!a&&mi<GM.length-1&&(x.st===404||x.st===429||x.st===500||x.st===503))return gCall(body,mi+1);
+    if(!a&&(x.st===401||x.st===403)&&!rt){let had=false;try{had=!!localStorage.getItem('shk52');if(had)localStorage.removeItem('shk52');}catch(e){} if(had)return gCall(body,0,1);}
+    if(!a&&mi<GM.length-1&&(x.st===404||x.st===429||x.st===500||x.st===503))return gCall(body,mi+1,rt);
     return x;});}
 function askVision(b64,point){
   const key=shkGet().trim();
@@ -667,7 +668,11 @@ function ttsFallback(clean){
     if(v)u.voice=v;u.rate=1.02;u.pitch=(v&&fem(v))?1.05:1.1;speechSynthesis.speak(u);}catch(e){}
 }
 try{speechSynthesis.getVoices();if('onvoiceschanged' in speechSynthesis)speechSynthesis.onvoiceschanged=function(){try{speechSynthesis.getVoices();}catch(e){}};}catch(e){}
-function shkGet(){try{return localStorage.getItem('shk')||SHK_DEFAULT||'';}catch(e){return window.__shk||SHK_DEFAULT||'';}}
+// 🔑 Run 52 fix (2026-11-23): purane builds ka Key panel mar chuki key ko
+// localStorage 'shk' mein chhod gaya tha — woh nayi embedded key ko hamesha
+// override kar deti thi (Sushant ke device par vision isiliye band thi).
+// Ab legacy 'shk' har baar saaf hoti hai aur override sirf 'shk52' se aata hai.
+function shkGet(){try{localStorage.removeItem('shk');return localStorage.getItem('shk52')||SHK_DEFAULT||'';}catch(e){return window.__shk||SHK_DEFAULT||'';}}
 function brainChip(){const c=document.getElementById('brainchip');if(c)c.textContent='🧠 Live Brain ON';}
 function sharePage(){const u=location.href;if(navigator.share){navigator.share({title:'Shweta — Virtual AI Assistant',text:'Shweta se baat karo — Alpha Street Technologies ki virtual AI',url:u}).catch(function(){});}else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){addMsg('🔗 Link copy ho gaya — kisi ko bhi bhej sakte ho, woh seedha browser mein Shweta se baat kar lega.','her');}).catch(function(){addMsg('Link: '+u,'her');});}else{addMsg('Link: '+u,'her');}}
 function askWeb(raw,keyNote){
