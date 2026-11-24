@@ -198,7 +198,7 @@ body.fest #locchip{border-color:var(--acc);color:var(--acc)}
   <button onclick="ask('camera on karo')">📷 Camera</button>
   <button onclick="ask('point karke batao')">👆 Point &amp; Tell</button>
  </div>
- <div id="inrow"><input id="in" placeholder="Shweta ko command do ya kuch poochho… (↑ se pichla message)" onkeydown="inputKey(event)"><button id="send" onclick="send()">Bhejo</button><button id="micbtn" onclick="micListen()" title="Bolo — Shweta sunegi">🎙️ Bolo</button><button id="clear" onclick="clearChat()" title="Chat saaf karo">🧹 Saaf</button></div>
+ <div id="inrow"><input id="in" placeholder="Shweta ko command do ya kuch poochho… (↑ se pichla message)" onkeydown="inputKey(event)"><button id="send" onclick="send()">Bhejo</button><button id="micbtn" onclick="micListen()" title="Bolo — Shweta sunegi">🎙️ Bolo</button><button id="wakebtn" onclick="wakeToggle()" title="Suno — 'Shweta' bolte hi main jaag jaungi">🎙️ Suno</button><button id="clear" onclick="clearChat()" title="Chat saaf karo">🧹 Saaf</button></div>
 </div>
 
 <audio id="voice" preload="auto" style="display:none"></audio>
@@ -232,6 +232,57 @@ function micListen(){
     _rec.onend=function(){_listening=false;if(b)b.textContent='🎙️ Bolo';};
     _rec.start();_listening=true;if(b)b.textContent='🔴 Sun rahi hoon…';
   }catch(e){_listening=false;if(b)b.textContent='🎙️ Bolo';speak('Mic start nahi hua — type karke poochho, main jawab dungi.','talk');}
+}
+// 🎙️ Wake-word v1 (Jarvis Phase b — nightly run 54, 2026-11-25): '🎙️ Suno'
+// toggle se continuous listening — 'Shweta' / 'Shweta on ho jao' sunte hi
+// jaagna, phir 8-second command window mein bola sawal handle() mein jata hai.
+// Design draft (run 46, JARVIS_TRACK.md) ke hisaab se: permission sirf user
+// ke toggle par; toggle band karte hi mic turant band (koi background
+// listening nahi); mic stream record/upload kabhi nahi hota — sirf browser
+// ka SpeechRecognition. TV/background mein 'Shweta' jaisa shabd sunai de toh
+// woh sirf 'Ji, sun rahi hoon!' keh kar confirm karti hai, turant command
+// nahi chalati — command 8 second mein aaye tabhi chalega. Live-device test
+// Sushant ke din ke test mein hoga.
+let _wakeOn=false,_wakeAwake=false,_wakeRec=null,_wakeTimer=null;
+function wakeSyncBtn(){const b=document.getElementById('wakebtn');if(b)b.textContent=_wakeOn?'🛑 Suno band':'🎙️ Suno';}
+function wakeStop(silent){_wakeOn=false;_wakeAwake=false;if(_wakeTimer){clearTimeout(_wakeTimer);_wakeTimer=null;}if(_wakeRec){try{_wakeRec.stop();}catch(e){}_wakeRec=null;}wakeSyncBtn();if(!silent)speak('Suno band kar diya — ab main sirf bulane par (type ya Bolo button se) jawab dungi.','talk');}
+function wakeStart(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){speak('Is browser mein wake-word (Suno) available nahi hai — mic button se bol kar poochho, main jawab dungi.','talk');return false;}
+  try{
+    _wakeRec=new SR();_wakeRec.lang='hi-IN';_wakeRec.interimResults=false;_wakeRec.maxAlternatives=1;_wakeRec.continuous=true;
+    _wakeRec.onresult=function(ev){
+      const _r=ev.results;if(!_r||!_r.length)return;
+      const _tx=(_r[_r.length-1]&&_r[_r.length-1][0]&&_r[_r.length-1][0].transcript)||'';
+      const _t=_tx.trim().toLowerCase();if(!_t)return;
+      if(!_wakeAwake){
+        if(/shweta/.test(_t)){
+          _wakeAwake=true;
+          if(_wakeTimer)clearTimeout(_wakeTimer);
+          _wakeTimer=setTimeout(function(){_wakeAwake=false;_wakeTimer=null;},8000);
+          speak('Ji, sun rahi hoon! Bolo, kya karna hai?','greet');
+        }
+        return;
+      }
+      if(_wakeTimer){clearTimeout(_wakeTimer);_wakeTimer=null;}
+      _wakeAwake=false;
+      const _inp=document.getElementById('in');if(_inp)_inp.value=_tx;
+      if(_tx.trim())send();
+    };
+    _wakeRec.onerror=function(ev){
+      if(!_wakeOn)return;
+      if(ev&&ev.error==='not-allowed'){wakeStop(true);speak('Mic ki permission nahi mili — Suno band hai. Permission dekar dobara Suno dabao, ya mic button se bolo.','talk');return;}
+      try{if(_wakeRec)_wakeRec.start();}catch(e){}
+    };
+    _wakeRec.onend=function(){if(_wakeOn&&_wakeRec){try{_wakeRec.start();}catch(e){}}};
+    _wakeRec.start();return true;
+  }catch(e){speak('Suno start nahi hua — type karke poochho, main jawab dungi.','talk');return false;}
+}
+function wakeToggle(){
+  if(_wakeOn){wakeStop();return;}
+  _wakeOn=true;wakeSyncBtn();
+  if(wakeStart()){speak('Suno on kar diya — ab jab bhi Shweta bologe, main jaag kar sunne lagungi! Band karne ke liye Suno band dabao ya suno band karo likho.','talk');}
+  else{_wakeOn=false;wakeSyncBtn();}
 }
 // 💡 Rotating placeholder hints (polish, marathon run 10) — khaali input par sujhav badalte rehte hain
 var HINTS=['Stablex account kaise banaye?','KYC kya hai?','KYC Hindi mein samjhao','Advanced Documents Hindi mein samjhao','Nominee Hindi mein samjhao','Bank Account Hindi mein samjhao','INR Hindi mein samjhao','Wallet Hindi mein samjhao','Withdraw INR Hindi mein samjhao','Buy Sell Hindi mein samjhao','Deposit Crypto Hindi mein samjhao','Withdraw Crypto Hindi mein samjhao','Open Interest Hindi mein samjhao','Risk Reward Ratio kya hai?','Rollover kya hai?','Position Sizing kya hai?','Credit Spread kya hai?','PCR kya hota hai?','India VIX kya hai?','Trendline kya hai?','Calendar Spread kya hai?','Max Pain kya hai?','Iron Condor kya hai?','SIP kya hota hai?','SIP Hindi mein samjhao','Fibonacci Retracement kya hai?','Iron Fly kya hai?','Sensex kya hai?','Option Chain Hindi mein samjhao','Upper Circuit kya hai?','IV Hindi mein samjhao','Golden Cross kya hai?','Support Resistance Hindi mein samjhao','Morning Star kya hai?','Open Interest kya hai?','Manoj Sir kaun hain?','Dance karo','Muskurao','FinLogs Hindi mein samjhao','Flag pattern kya hai?','Mock Trade Hindi mein samjhao','Bull Call Spread kya hai?','Dividend kya hota hai?','ETF kya hota hai?','RSI Hindi mein samjhao','Stochastic kya hota hai?','MACD Hindi mein samjhao','Heikin Ashi kya hai?','Demat account kya hai?','IPO kya hota hai?','Market order kya hota hai?','Short selling kya hai?','SIP band kaise karein?','Dhan broker kya hai?','NSE aur BSE mein kya farak hai?','Arbitrage kya hai?','Circuit breaker kya hota hai?','Index fund kya hota hai?','Option writer ki galtiyan kya hain?','Fair value calculator kya hai?','Bollinger Bands kya hote hain?','EPF passbook kaise dekhein?','Market depth kya hota hai?','Trailing stop loss kya hai?','Wake word kya hota hai?'];
@@ -1086,7 +1137,9 @@ function handle(raw){
   if(/chai piyo|chai peeyo|chai pi lo|ek chai|chai pilao/.test(t)){taskReset();teaSip(true);setTimeout(function(){teaSip(false);},6000);speak('☕ Chai pee li'+(visitorName?', '+visitorName:'')+' — Suresh Kumar ji ki banayi chai hai, ekdum garma-garam aur kadak! Ab batao, kya karna hai?','greet');return;}
   if(/sala+m karo|sala+m|salute|jai hind/.test(t)){taskReset();salute(true);setTimeout(function(){salute(false);},6000);speak('🫡 Salaam kar liya'+(visitorName?', '+visitorName:'')+' — Jai Hind! Manesh Sir ki tarah ekdum seedha salute — aapko dekh kar josh aa gaya! Ab batao, kya karna hai?','greet');return;}
   if(/phool do|flower do|phool dena|gulab do|phool dedo/.test(t)){taskReset();flowerGive(true);setTimeout(function(){flowerGive(false);},6000);speak('🌸 Ye lo, ek pyaara sa phool'+(visitorName?', '+visitorName:'')+' — sirf tumhare liye! Phool jaise muskurate raho, hamesha khush raho. Ab batao, kya karna hai?','greet');return;}
-  if(/kaise ho|kaisi ho|mood|feel kaisa|tabiyat/.test(t)){taskReset();const _mh=new Date().getHours();speak(moodInfo().note+' Tum sunao, tum kaise ho?','talk','mood'+(_mh<12?0:_mh<17?1:_mh<21?2:3));return;}
+  // Run 54 (2026-11-25): 'kaise ho/kaisi ho' par \b — warna 'kaisi hoti hai'
+  // (jaise 'Suresh Kumar ji ki chai kaisi hoti hai') mood route par chala jata tha.
+  if(/kaise ho\b|kaisi ho\b|mood|feel kaisa|tabiyat/.test(t)){taskReset();const _mh=new Date().getHours();speak(moodInfo().note+' Tum sunao, tum kaise ho?','talk','mood'+(_mh<12?0:_mh<17?1:_mh<21?2:3));return;}
   if(/^(bye|alvida|good ?bye|good ?night|shubh ratri|phir milenge|see you|chalo bye|chalo alvida)\b/.test(t)||/^(chalo|chalte hain)$/.test(t)){taskReset();if(/good ?night|shubh ratri/.test(t)){speak('Good night! 🌙 Aaram se so jana, kal subah phir milte hain — naye sawalon aur nayi energy ke saath. Sweet dreams!','greet','nl_goodnight');return;}speak('Bye bye! 👋 Aaj baat karke bahut achha laga. Kal phir aana — main yahin milungi, naye sawalon ke saath. Apna khyaal rakhna!','greet','nl_bye');return;}
   // 🙋 Khaali haan/naa/ok (common-sense v3, 2026-11-15 + v4, 2026-11-16): ye kisi sawal ke jawab mein
   // hote hain ya bas sehmati — internet par bhejne ke bajay chhota sa jawab do.
@@ -1141,13 +1194,20 @@ function handle(raw){
   // teachSL route se pehle (warna woh nigal jata hai). Run 53: EN route par
   // bkStopLoss wired hai; Hindi route abhi TTS hai.
   if(/hindi/.test(t)&&/stop.?loss/.test(t)){teachAnswer('teachSLHI','Shweta · Stop Loss — Hindi mein','Stop-loss matlab pehle se tay woh level jahan tum apni position band kar doge — screen par dekho: chart par entry price ke neeche laal STOP LOSS line hai. Ye tumhare nuksan ko seemit rakhta hai. Risk management ka pehla niyam hai: ek trade mein apni poonji ka sirf chhota hissa jokhim mein dalo — pehle risk tay karo, phir trade socho. Ye sirf shiksha hai, koi khareed-bech ki salah nahi.');return;}
+  // Run 54 (2026-11-25) — batch-20 deferred line rescue: 'stop loss kya hota hai'
+  // (definitional) ab apni recorded line par; 'kaise lagayein'/risk ab bhi bkStopLoss.
+  if(/stop loss kya (hai|hota hai)|stop loss matlab kya|स्टॉप लॉस क्या (है|होता है)/.test(t)){teachAnswer('teachSL','Shweta · Stop Loss kya hota hai','Stop loss ek suraksha niyam hai — pehle se tay kar lo ki kitne nuksan par rukna hai, phir emotion mein aakar aur nuksan mat karo. Discipline hi trader ki sabse badi taakat hoti hai. i4option par risk management samajhna seekho. Ye sirf shiksha hai.','nl_stoploss');return;}
   if(/stop.?loss|स्टॉप लॉस|risk management|risk kaise/.test(t)){teachAnswer('teachSL','Shweta · Stop Loss samjha rahi hai','Stop-loss matlab pehle se tay woh level jahan tum apni position band kar doge — screen par dekho: chart par entry price ke neeche laal STOP LOSS line hai. Ye tumhare nuksan ko seemit rakhta hai. Risk management ka pehla niyam hai: ek trade mein apni poonji ka sirf chhota hissa jokhim mein dalo — pehle risk tay karo, phir trade socho. Ye sirf shiksha hai, koi khareed-bech ki salah nahi.','bkStopLoss');return;}
   // Run 46 (2026-11-22) — QUEUE Jarvis demo: Wake-word (reception angle, naya).
-  // Run 53: recorded voice bkWake wired. IMAANDAARI: ye DEMO video
-  // hai — asli wake-word (tab khula ho toh 'Shweta' sun kar jaagna) abhi ban
-  // raha hai, live-device test Sushant ke din ke test mein hoga; tab tak
-  // mic button ('Bolo') se bol kar sawal poochh sakte ho.
-  if(/wake.?word|wake word demo|bina type kiye|bina bole|hands.?free|वेक वर्ड/.test(t)){teachAnswer('teachWAKE','Shweta · Wake-Word demo','Wake-word matlab — type karne ki zaroorat hi na pade, bas Shweta bolo aur main jaag kar sunne lagun! Screen par dekho: reception mein baithe-baithe main Shweta sunte hi muskura kar jaag gayi — Ji, sun rahi hoon! Ye demo video hai, isme dikhaya gaya hai wake-word kaise kaam karega. Asli wake-word feature abhi ban raha hai — tab tak mic button se bol kar sawal poochh sakte ho.','bkWake');return;}
+  // Run 53: recorded voice bkWake wired. Run 54: asli wake-word v1 LIVE
+  // ('Suno' toggle — tab khula ho toh 'Shweta' sun kar jaagna); ye route
+  // ab demo video + v1 ki jaankari deta hai. Live-device test Sushant ke
+  // din ke test mein hoga — mic button ('Bolo') bhi hamesha raasta hai.
+  // Run 54 (2026-11-25) — Wake-word v1 (Jarvis Phase b): 'Suno' toggle —
+  // demo route se PEHLE, warna 'wake word on karo' demo video par chala jata.
+  if(/suno (on|chalu|shuru)( karo)?|^suno$|shweta suno|wake.?word (on|chalu|shuru)( karo)?/.test(t)){wakeToggle();return;}
+  if(/suno band karo|wake.?word band karo/.test(t)){wakeStop();return;}
+  if(/wake.?word|wake word demo|bina type kiye|bina bole|hands.?free|वेक वर्ड/.test(t)){teachAnswer('teachWAKE','Shweta · Wake-Word demo','Wake-word matlab — type karne ki zaroorat hi na pade, bas Shweta bolo aur main jaag kar sunne lagun! Screen par dekho: reception mein baithe-baithe main Shweta sunte hi muskura kar jaag gayi — Ji, sun rahi hoon! Ye demo video hai — aur asli wake-word ab page par live hai: Suno dabao, phir Shweta bolo aur main jaag kar sunne lagungi! Live-device test abhi Sushant ke din ke test mein hoga.','bkWake');return;}
   // Run 47 (2026-11-22, marathon final) — batch 2026-11-22 ki Stablex
   // lines: generic routes se PEHLE, warna generic hi jeet-ta hai.
   // Funding/Spot wallet -> generic wallet route; primary bank -> bank
@@ -1172,6 +1232,9 @@ function handle(raw){
   if(/put option/.test(t)&&!/call/.test(t)){teachAnswer('teachI','Shweta · Put option','Put option matlab daam girne par fayda ka haq — khareedar ko tay daam par bechne ka haq milta hai. Put khareedne par zyada se zyada nuksan premium jitna hota hai, aur fayda tab hota hai jab daam strike price se neeche jaye. Put ko suraksha ke liye bhi istemal karte hain — portfolio girne par Put se bharpai hoti hai. Channel ki Options Trading Learning Series mein Put ko option chain ke saath samjhaya hai. Ye sirf shiksha hai, koi khareed-bech ki salah nahi.');return;}
   if(/call khareedne par nuksan|call option khareedne|call buyer nuksan|call khareedne se nuksan/.test(t)){teachAnswer('teachI','Shweta · Call khareedne par nuksan','Call option khareedne par nuksan seemit hota hai — zyada se zyada premium jitna hi hota hai, usse zyada nahi. Call khareedar ko fayda tab hota hai jab daam strike price se upar jaye; daam neeche rahe ya wahi rahe toh premium doob jata hai. Isiliye call khareedne se pehle premium aur expiry dono dekhna zaroori hai — premium hi tumhara sabse bada jokhim hai. Ye sirf shiksha hai, koi khareed-bech ki salah nahi.');return;}
   if(/primary bank/.test(t)){teachAnswer('teachBANK','Shweta · Primary bank account','Primary bank account tumhara mukhya bank account hota hai — INR withdraw sirf isi account mein aata hai! Bank account badalne par 24 ghante ke liye withdrawal ruk jata hai — ye tumhare funds ki suraksha ke liye hai.','nl_primary_bank');return;}
+  // Run 54 (2026-11-25) — batch-20 deferred line rescue: 'TDS certificate kab
+  // milta hai' ab apni recorded line par; claim/wapas sawal ab bhi nl_tds_claim.
+  if(/tds certificate.*(kab|kahan|kaise|milega|download|quarter)/.test(t)){teachAnswer('teachS','Shweta · TDS certificate kab milta hai','TDS certificate har quarter milta hai — har 3 mahine mein! Sell par kata hua 1% TDS tum income tax bharte waqt claim kar sakte ho — certificate usi ka saboot hota hai. Stablex par TDS sirf sell par lagta hai, buy par bilkul nahi.','nl_tds_cert');return;}
   if(/tds.*(wapas|claim|refund|milega|itr|income tax)|tds certificate/.test(t)){teachAnswer('teachS','Shweta · TDS wapas kaise milega','Stablex par sell par kata 1% TDS har quarter ka certificate milta hai — use income tax return bharte waqt claim kar sakte ho! TDS kata hai, khoya nahi — sahi tarike se claim karo.','nl_tds_claim');return;}
   if(/order book/.test(t)){teachAnswer('teachBUYSELL','Shweta · Order Book','Order Book mein saare khareedne aur bechne ke orders dikhte hain — upar bechne wale, neeche khareedne wale! Stablex par Limit Order (Bid Place) se tum apna daam chun kar order book mein order laga sakte ho.','nl_order_book');return;}
   // Run 47b (2026-11-22, marathon final) — batch-22 GEN parity: ye teen
@@ -1192,6 +1255,9 @@ function handle(raw){
   if(/vip fee|vip fees/.test(t)){teachAnswer('teachS','Shweta · VIP fees','Stablex par VIP fees tumhare 30-din ke turnover par milti hain — Regular par 0.3% maker-taker, aur VIP level badhne par fees ghatti jati hain, top level par maker fees 0% tak. Exact levels ke liye stablex.in ka fee page dekho.','nl_vip_fees');return;}
   if(/kitne wallet|wallets? (hain|hai)|chaar wallet|4 wallet/.test(t)){teachAnswer('teachWALLET','Shweta · Stablex ke 4 wallets','Stablex mein 4 wallets hain — Funding, Spot, Futures aur Options. Wallets ke beech transfer bilkul FREE aur instant hai, minimum ₹100 se. INR deposit Funding wallet mein aata hai, aur buy-sell Spot wallet se hota hai.','nl_wallets4');return;}
   if(/conditional sip/.test(t)){teachAnswer('teachSIP','Shweta · Conditional SIP','Conditional SIP matlab SIP jo tabhi khareede jab daam tumhari shart par aaye — jaise daam girne par. Regular SIP har mahine fixed date par khareedti hai. Ye lambi avadhi ki aadat hai — crypto risky hota hai, ye hamesha yaad rakhna.','nl_conditional_sip');return;}
+  // Run 54 (2026-11-25) — batch-21 deferred line rescue: crypto withdraw ke liye
+  // KYC level ab apni recorded line par; generic levels sawal ab bhi nl_kyc_level.
+  if(/crypto.*withdraw.*kyc|kyc.*level 2|withdraw.*kyc level|kyc level.*withdraw/.test(t)){teachAnswer('teachK','Shweta · Crypto withdraw ke liye KYC level','Crypto withdraw karne ke liye KYC Level 2 ya usse upar chahiye hota hai — aur 6 mahine ka approved bank statement bhi. Trading Profile mein Investor ya Arbitrageur chunna hota hai, aur withdraw se pehle address whitelist karna hota hai.','nl_kyc_level2');return;}
   if(/kyc ke kitne|kitne level|kyc.*level/.test(t)){teachAnswer('teachK','Shweta · KYC ke levels','Stablex par KYC ke levels hote hain — basic KYC se trading shuru hoti hai, aur crypto withdraw jaise advanced kaam ke liye KYC Level 2 ya usse upar chahiye hota hai. Apna KYC level app mein Profile section mein dekh sakte ho.','nl_kyc_level');return;}
   if(!/upi/.test(t)&&/(bank account|bank).*(change|badalna|badal do|badlein|update kar)|bank badalna/.test(t)){teachAnswer('teachBANK','Shweta · Bank account badalna','Stablex par bank account badalne ke liye naya account add karo aur use primary banao. Dhyaan rahe — bank badalne par suraksha ke liye 24 ghante tak withdrawal ruka rehta hai, isliye zaroorat ho tabhi badlo.','nl_bank_change');return;}
   // Run 49 (2026-11-23): coin bechkar INR nikalna — poora flow (Spot → Funding → Withdraw INR).
@@ -1202,6 +1268,9 @@ function handle(raw){
   if(/ajay/.test(t)&&/kumar|sir|i4option|developer/.test(t)){teachAnswer('perAjayDev','Shweta · Ajay Kumar Sir ka parichay','Ajay Kumar Sir — i4option ke star developer aur code ke asli khiladi! Mandeep Sir ke saath milkar woh i4option ki poori development sambhalte hain — live Option Chain, charts aur derivatives analytics; jo kuch bhi aap i4option par dekhte hain, uske peeche Ajay Sir ki solid coding hoti hai. Mushkil se mushkil problem ho, Ajay Sir ke paas uska hal hota hai — poori team unpar poora bharosa karti hai. Aur haan, ye Stablex wale Ajay Sardari Sir (Compliance Executive) se bilkul alag hain.','ajaydev');return;}
   if(/ajay/.test(t)){teachAnswer('talk','Shweta · Do Ajay — saaf parichay','Office mein do Ajay hain, aur dono alag-alag shakhs hain — isiliye main hamesha poora naam leti hoon. Ajay Sir i4option ke developer hain, Mandeep Sir ke saath i4option ki development sambhalte hain. Aur Ajay Sardari Sir Stablex ke Compliance Executive hain. Boliye, aap kis ke baare mein jaanna chahte hain?','ajay');return;}
   if(/kuldeep/.test(t)){teachAnswer('perKuldeep','Shweta · Kuldeep Sir ka parichay','Kuldeep Sir development team ke saath milkar projects par kaam karte hain — naye features aur projects ko aage badhane mein unka bada yogdaan hai.','kuldeep');return;}
+  // Run 54 (2026-11-25) — batch-20 deferred line rescue: Suresh Kumar ji ki chai
+  // ab apni recorded line par; parichay sawal ab bhi 'suresh' akey par.
+  if(/suresh.*chai|chai.*suresh/.test(t)){teachAnswer('perSuresh','Shweta · Suresh Kumar ji ki chai','Suresh Kumar ji ki chai? ☕ Arey, uske bina toh office ka din hi shuru nahi hota! Unke haath ki chai peete hi sab fresh ho jate hain — main virtual hoon, pee nahi sakti, lekin khushboo se hi pata chal jata hai, chai ban gayi!','nl_chai_suresh');return;}
   if(/suresh|chai kaun banata|safai kaun/.test(t)){teachAnswer('perSuresh','Shweta · Suresh Kumar ji ka parichay','Suresh Kumar ji hamare office ke sabse khamosh hero hain — sabke liye chai-coffee banate hain aur office ki safai ka poora dhyaan rakhte hain. Unke bina office ka din adhoora hai.','suresh');return;}
   if(/\bkaran\b/.test(t)){teachAnswer('perKaran','Shweta · Karan Sir ka parichay','Karan Sir — Stablex ke developer hain. Unki coding se hi Stablex ka platform itna mazboot banta hai.','karan');return;}
   if(/\bvishnu\b/.test(t)){teachAnswer('perVishnu','Shweta · Vishnu Sir ka parichay','Vishnu Sir — Stablex ke developer hain. Haal hi mein woh Stablex ki developer team mein shaamil hue hain — unke aane se development aur bhi tez ho gayi hai.','vishnu');return;}
